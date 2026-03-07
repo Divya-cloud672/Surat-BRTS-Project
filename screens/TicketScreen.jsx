@@ -17,7 +17,7 @@ export default function TicketScreen() {
     else if (from === "Vadodara" && to === "Ahmedabad") dist = 110;
     else dist = 100;
 
-    const price = dist * 2; // ₹2 per km
+    const price = dist * 1; // ₹1 per km
 
     setDistance(dist);
     setFare(price);
@@ -28,19 +28,6 @@ export default function TicketScreen() {
       <Text style={styles.title}>🚌 Bus M Ticket</Text>
 
       <Text style={styles.label}>From</Text>
-      {/* <Picker selectedValue={from} onValueChange={(item) => setFrom(item)}>
-        <Picker.Item label="Surat" value="Surat" />
-        <Picker.Item label="Ahmedabad" value="Ahmedabad" />
-        <Picker.Item label="Vadodara" value="Vadodara" />
-      </Picker>
-
-      <Text style={styles.label}>To</Text>
-      <Picker selectedValue={to} onValueChange={(item) => setTo(item)}>
-        <Picker.Item label="Ahmedabad" value="Ahmedabad" />
-        <Picker.Item label="Surat" value="Surat" />
-        <Picker.Item label="Vadodara" value="Vadodara" />
-      </Picker> */}
-
       <TouchableOpacity style={styles.button} onPress={calculateFare}>
         <Text style={styles.buttonText}>Calculate Ticket</Text>
       </TouchableOpacity>
