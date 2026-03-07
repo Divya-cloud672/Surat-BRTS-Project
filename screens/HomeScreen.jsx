@@ -97,10 +97,10 @@ export default function HomeScreen({ navigation }) {
 
         <TouchableOpacity
           style={[styles.card, { backgroundColor: '#e74c3c' }]}
-          onPress={() => navigation.navigate('My Routes')}
+          onPress={() => navigation.navigate('Fare-Chart')}
         >
           <Icon name="star" size={32} color="#fff" />
-          <Text style={styles.cardText}>My Routes</Text>
+          <Text style={styles.cardText}>Fare Chart</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
