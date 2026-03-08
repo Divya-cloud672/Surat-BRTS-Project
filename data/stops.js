@@ -1,14 +1,57 @@
-
-export const stops = [
-  { id: '1', name: 'Millenium Park', distance: '110 Mtr' },
-  { id: '2', name: 'Shreenath Residency', distance: '446 Mtr' },
-  { id: '3', name: 'Jitesh Park Society', distance: '558 Mtr' },
-  { id: '4', name: 'Karadva Gam', distance: '606 Mtr' },
-  { id: '5', name: 'Vrukshlaxmi Society', distance: '676 Mtr' },
-  { id: '6', name: 'Mark Point Dindoli', distance: '711 Mtr' },
-  { id: '7', name: 'Dindoli Gam', distance: '972 Mtr' },
-  { id: '8', name: 'Ghardi Mata Mandir', distance: '1,180 Mtr' },
-  { id: '9', name: 'Dindoli Kharwasa Road B...', distance: '1,253 Mtr' },
-  { id: '10', name: 'Laxminagar Society', distance: '1,365 Mtr' },
-  { id: '11', name: 'Maninagar', distance: '1,588 Mtr' },
+// data/stops.js
+export default [
+  {
+    id: 1,
+    name: "Railway Station",
+    address: "Surat Railway Station, Station Road",
+    latitude: 21.2062,
+    longitude: 72.8399,
+    routeCount: 8,
+    isActive: true
+  },
+  {
+    id: 2,
+    name: "Udhana Darwaja",
+    address: "Udhana Darwaja, Ring Road",
+    latitude: 21.1862,
+    longitude: 72.8299,
+    routeCount: 6,
+    isActive: true
+  },
+  {
+    id: 3,
+    name: "Sachin GIDC",
+    address: "Sachin GIDC, Sachin",
+    latitude: 21.1662,
+    longitude: 72.8599,
+    routeCount: 5,
+    isActive: true
+  },
+  {
+    id: 4,
+    name: "Katargam",
+    address: "Katargam Circle, Katargam",
+    latitude: 21.2262,
+    longitude: 72.8199,
+    routeCount: 7,
+    isActive: true
+  },
+  {
+    id: 5,
+    name: "Adajan",
+    address: "Adajan Patiya, Adajan",
+    latitude: 21.1962,
+    longitude: 72.7899,
+    routeCount: 6,
+    isActive: false
+  },
+  {
+    id: 6,
+    name: "Vesu",
+    address: "Vesu Cross Road, Vesu",
+    latitude: 21.1462,
+    longitude: 72.7499,
+    routeCount: 4,
+    isActive: true
+  }
 ];
