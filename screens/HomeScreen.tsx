@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -20,7 +19,6 @@ const { width, height } = Dimensions.get('window');
 const isSmallDevice = width < 375;
 const isLargeDevice = width >= 768;
 
-
 const responsiveFontSize = (size: number) => {
   if (isLargeDevice) return size * 1.1;
   if (isSmallDevice) return size * 0.85;
@@ -29,9 +27,7 @@ const responsiveFontSize = (size: number) => {
 const responsiveWidth = (percentage: number) => (width * percentage) / 100;
 const responsiveHeight = (percentage: number) => (height * percentage) / 100;
 
-
 const cardWidth = (width - responsiveWidth(8) - responsiveWidth(2.5)) / 2;
-
 
 interface MenuItem {
   id: number;
@@ -41,15 +37,11 @@ interface MenuItem {
   screen: keyof RootStackParamList;
 }
 
-
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'Home'
 >;
-
-type HomeScreenProps = {
-  navigation: HomeScreenNavigationProp;
-};
+type HomeScreenProps = { navigation: HomeScreenNavigationProp };
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('');
@@ -89,7 +81,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       color: '#2980b9',
       screen: 'stops',
     },
-  
     {
       id: 4,
       title: 'Fare Chart',
@@ -125,6 +116,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     ]);
   };
 
+  // Safe StatusBar height
+  const headerPaddingTop =
+    Platform.OS === 'android'
+      ? (StatusBar.currentHeight || 20) + 5
+      : responsiveHeight(1.5);
+
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#1565c0" barStyle="light-content" />
@@ -133,8 +130,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-       
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: headerPaddingTop }]}>
           <View style={styles.headerLeft}>
             <Icon name="bus" size={responsiveFontSize(28)} color="#fff" />
             <View style={styles.headerTextContainer}>
@@ -158,7 +154,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-      
         <View style={styles.welcomeContainer}>
           <Text style={styles.welcomeText}>Welcome to BRTSConnect</Text>
           <Text style={styles.welcomeSubText}>
@@ -166,7 +161,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </Text>
         </View>
 
-      
         <View style={styles.grid}>
           {menuItems.map((item, index) => (
             <TouchableOpacity
@@ -193,7 +187,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           ))}
         </View>
 
-        
         <View style={styles.noteContainer}>
           <Icon name="information-outline" size={16} color="#666" />
           <Text style={styles.noteText}>Tap any service to get started</Text>
@@ -215,12 +208,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#1565c0',
-    paddingVertical: responsiveHeight(1.5),
     paddingHorizontal: responsiveWidth(4),
-    paddingTop:
-      Platform.OS === 'android'
-        ? StatusBar.currentHeight! + 5
-        : responsiveHeight(1.5),
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
