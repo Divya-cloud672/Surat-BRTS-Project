@@ -1,4 +1,3 @@
-// screens/WelcomeScreen.tsx
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -8,113 +7,91 @@ import {
   Animated,
   TouchableOpacity,
   StatusBar,
-  Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
-const { width, height } = Dimensions.get('window');
+type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
 
-type RootStackParamList = {
-  Welcome: undefined;
-  Language: undefined;
-};
-
-type WelcomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
-
-export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
+export default function WelcomeScreen({ navigation }: Props) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
-  const scaleAnim = useRef(new Animated.Value(0.5)).current;
-  const buttonScaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     StatusBar.setBarStyle('light-content');
 
+    // Animate welcome screen
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1500,
+        duration: 1200,
         useNativeDriver: true,
       }),
       Animated.spring(slideAnim, {
         toValue: 0,
-        tension: 20,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 10,
-        friction: 2,
+        tension: 15,
+        friction: 5,
         useNativeDriver: true,
       }),
     ]).start();
+
+    // Check if user has already selected language
+    checkLanguage();
   }, []);
 
-  const handleButtonPress = () => {
-    Animated.sequence([
-      Animated.timing(buttonScaleAnim, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(buttonScaleAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start(() => navigation.replace('Language'));
+  const checkLanguage = async () => {
+    try {
+      const lang = await AsyncStorage.getItem('userLanguage');
+      // If language already selected, go to Home after a brief delay
+      if (lang) {
+        setTimeout(() => {
+          navigation.replace('Home');
+        }, 2000); // Show welcome screen for 2 seconds
+      }
+    } catch (error) {
+      console.error('Error checking language:', error);
+    }
   };
 
+  const handleGetStarted = () => {
+    navigation.replace('Language');
+  };
+
+  let bg;
+  try {
+    bg = require('../assets/images/bus4.jpg');
+  } catch {
+    bg = { uri: 'https://via.placeholder.com/400x800.png' };
+  }
+
   return (
-    <ImageBackground
-      // Use local image if exists, fallback to placeholder
-      source={
-        require('../assets/images/bus4.jpg') // make sure this path exists
-          ? require('../assets/images/bus4.jpg')
-          : { uri: 'https://via.placeholder.com/400x800.png' }
-      }
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
+    <ImageBackground source={bg} style={styles.background}>
       <View style={styles.overlay}>
         <Animated.View
-          style={[
-            styles.content,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
-            },
-          ]}
+          style={{
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+            alignItems: 'center',
+            width: '100%',
+          }}
         >
           <View style={styles.iconContainer}>
             <Icon name="bus" size={80} color="#fff" />
           </View>
-
           <Text style={styles.title}>BRTSConnect</Text>
           <Text style={styles.subtitle}>Surat</Text>
+          <Text style={styles.tagline}>Smart Travel • Safe Journey</Text>
 
-          <View style={styles.taglineContainer}>
-            <Text style={styles.tagline}>Smart Travel • Safe Journey</Text>
-            <Text style={styles.taglineHindi}>
-              स्मार्ट यात्रा • सुरक्षित सफर
-            </Text>
-            <Text style={styles.taglineGujarati}>
-              સ્માર્ટ મુસાફરી • સલામત સફર
-            </Text>
-          </View>
-
-          <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
-            <TouchableOpacity
-              style={styles.getStartedButton}
-              onPress={handleButtonPress}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.buttonText}>Get Started</Text>
-              <Icon name="arrow-right" size={24} color="#1565c0" />
-            </TouchableOpacity>
-          </Animated.View>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleGetStarted}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>Get Started</Text>
+            <Icon name="arrow-right" size={24} color="#1565c0" />
+          </TouchableOpacity>
         </Animated.View>
       </View>
     </ImageBackground>
@@ -122,14 +99,18 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: { flex: 1, width: '100%', height: '100%' },
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(21, 101, 192, 0.85)',
+    backgroundColor: 'rgba(21,101,192,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
-  content: { alignItems: 'center', paddingHorizontal: 20, width: '100%' },
   iconContainer: {
     width: 120,
     height: 120,
@@ -140,6 +121,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 2,
     borderColor: '#fff',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   title: {
     fontSize: 40,
@@ -147,35 +133,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     letterSpacing: 2,
     textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
   },
   subtitle: {
     fontSize: 24,
     color: '#fff',
     marginTop: 5,
     opacity: 0.9,
-    fontWeight: '600',
+    fontWeight: '500',
   },
-  taglineContainer: { marginTop: 30, alignItems: 'center' },
   tagline: {
     fontSize: 16,
     color: '#fff',
-    marginVertical: 2,
-    opacity: 0.9,
-    fontWeight: '500',
-  },
-  taglineHindi: {
-    fontSize: 15,
-    color: '#fff',
-    marginVertical: 2,
+    marginTop: 10,
     opacity: 0.8,
+    letterSpacing: 1,
   },
-  taglineGujarati: {
-    fontSize: 15,
-    color: '#fff',
-    marginVertical: 2,
-    opacity: 0.8,
-  },
-  getStartedButton: {
+  button: {
     flexDirection: 'row',
     backgroundColor: '#fff',
     paddingHorizontal: 40,
@@ -188,7 +164,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 5,
+    shadowRadius: 4,
   },
   buttonText: {
     color: '#1565c0',

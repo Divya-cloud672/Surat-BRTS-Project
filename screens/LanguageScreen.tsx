@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -6,183 +5,278 @@ import {
   StyleSheet,
   TouchableOpacity,
   ImageBackground,
+  ActivityIndicator,
   Alert,
   StatusBar,
-  ActivityIndicator,
+  Animated,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
-// ---- Types ----
-type LanguageScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'Language'
->;
-
-type LanguageScreenProps = {
-  navigation: LanguageScreenNavigationProp;
-};
+type Props = NativeStackScreenProps<RootStackParamList, 'Language'>;
 
 interface Language {
   code: string;
   name: string;
-  native: string;
-  icon: string;
   flag: string;
 }
 
-// ---- Component ----
-const LanguageScreen: React.FC<LanguageScreenProps> = ({ navigation }) => {
-  const [selectedLang, setSelectedLang] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const languages: Language[] = [
-    { code: 'en', name: 'English', native: 'English', icon: 'alphabet-latin', flag: '🇬🇧' },
-    { code: 'hi', name: 'Hindi', native: 'हिन्दी', icon: 'alpha-h', flag: '🇮🇳' },
-    { code: 'gu', name: 'Gujarati', native: 'ગુજરાતી', icon: 'alpha-g', flag: '🇮🇳' },
-  ];
+export default function LanguageScreen({ navigation }: Props) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  
+  // Slower animations
+  const [scaleAnim] = useState(new Animated.Value(1));
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [slideAnim] = useState(new Animated.Value(30));
 
   useEffect(() => {
-    checkPreviousLanguage();
+    // Slower entrance animation for the whole screen
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1500, // Slower fade in (1.5 seconds)
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 10, // Lower tension = slower spring
+        friction: 8,  // Higher friction = slower movement
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    checkSavedLanguage();
   }, []);
 
-  const checkPreviousLanguage = async () => {
+  const checkSavedLanguage = async () => {
     try {
-      const savedLanguage = await AsyncStorage.getItem('userLanguage');
-      if (savedLanguage) {
-        setSelectedLang(savedLanguage);
+      const saved = await AsyncStorage.getItem('userLanguage');
+      if (saved) {
+        setSelected(saved);
       }
     } catch (error) {
-      console.log('Error checking saved language:', error);
+      console.error('Error checking saved language:', error);
     }
   };
 
-  const handleLanguageSelect = async (lang: Language) => {
-    setSelectedLang(lang.code);
+  // Slower button animation when language is selected
+  useEffect(() => {
+    if (selected) {
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.03, // Smaller scale for subtle effect
+          duration: 400,  // Slower scale up (0.4 seconds)
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 400,  // Slower scale down (0.4 seconds)
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [selected]);
+
+  const handleContinue = async () => {
+    if (!selected) {
+      return Alert.alert(
+        'Select Language',
+        'Please choose a language to continue.',
+        [{ text: 'OK' }],
+      );
+    }
+
+    const lang = languages.find(l => l.code === selected);
+    if (!lang) return;
+
+    setLoading(true);
     try {
-      setLoading(true);
       await AsyncStorage.setItem('userLanguage', lang.code);
       await AsyncStorage.setItem('languageName', lang.name);
-
+      
+      // Add small delay before navigation for better UX
       setTimeout(() => {
-        setLoading(false);
         navigation.replace('Home');
       }, 500);
+      
     } catch (error) {
-      console.log('Save error:', error);
-      Alert.alert(
-        'Error',
-        'Failed to save language preference. Please try again.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Error', 'Failed to save language preference.');
+      console.error('Error saving language:', error);
       setLoading(false);
     }
   };
 
-  const handleContinue = () => {
-    if (selectedLang) {
-      const selectedLanguage = languages.find(lang => lang.code === selectedLang);
-      if (selectedLanguage) handleLanguageSelect(selectedLanguage);
-    } else {
-      Alert.alert(
-        'No Language Selected',
-        'Please select a language to continue',
-        [{ text: 'OK' }]
-      );
-    }
+  const handleSkip = () => {
+    Alert.alert(
+      'Skip Language Selection',
+      'English will be set as default. You can change this later in settings.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Continue with English',
+          onPress: async () => {
+            setLoading(true);
+            try {
+              await AsyncStorage.setItem('userLanguage', 'en');
+              await AsyncStorage.setItem('languageName', 'English');
+              
+              // Add small delay before navigation
+              setTimeout(() => {
+                navigation.replace('Home');
+              }, 500);
+              
+            } catch (error) {
+              Alert.alert('Error', 'Failed to save language preference.');
+              console.error('Error saving language:', error);
+              setLoading(false);
+            }
+          },
+        },
+      ],
+    );
   };
 
+  let bg;
+  try {
+    bg = require('../assets/images/bus4.jpg');
+  } catch {
+    bg = { uri: 'https://via.placeholder.com/400x800.png' };
+  }
+
   return (
-    <ImageBackground
-      source={require('../assets/images/bus4.jpg')}
-      style={styles.backgroundImage}
-    >
-      <StatusBar barStyle="light-content" backgroundColor="rgba(21, 101, 192, 0.97)" />
-      <View style={styles.overlay}>
-        <View style={styles.header}>
-          <View style={styles.headerIconContainer}>
-            <Icon name="translate" size={50} color="#fff" />
+    <ImageBackground source={bg} style={styles.background}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="rgba(21,101,192,0.97)"
+      />
+      <Animated.View 
+        style={[
+          styles.overlay,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}
+      >
+        <Text style={styles.header}>Choose Language</Text>
+
+        {/* Centered Language Buttons Container */}
+        <View style={styles.centerContainer}>
+          <View style={styles.langContainer}>
+            {languages.map((l, index) => {
+              // Individual card animation with delay
+              const cardAnim = new Animated.Value(0);
+              
+              useEffect(() => {
+                Animated.timing(cardAnim, {
+                  toValue: 1,
+                  duration: 800,
+                  delay: index * 200, // Each card appears with delay
+                  useNativeDriver: true,
+                }).start();
+              }, []);
+
+              return (
+                <Animated.View
+                  key={l.code}
+                  style={{
+                    opacity: cardAnim,
+                    transform: [
+                      {
+                        translateX: cardAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [50, 0],
+                        }),
+                      },
+                    ],
+                  }}
+                >
+                  <TouchableOpacity
+                    style={[styles.card, selected === l.code && styles.selected]}
+                    onPress={() => setSelected(l.code)}
+                    disabled={loading}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.flag}>{l.flag}</Text>
+                    <Text style={styles.langName}>{l.name}</Text>
+                    {selected === l.code && (
+                      <Icon name="check-circle" size={24} color="#4caf50" />
+                    )}
+                  </TouchableOpacity>
+                </Animated.View>
+              );
+            })}
           </View>
-          <Text style={styles.headerTitle}>Choose Language</Text>
-          <Text style={styles.headerSubtitle}>Select your preferred language</Text>
         </View>
 
-        <View style={styles.languageContainer}>
-          {languages.map(lang => (
-            <TouchableOpacity
-              key={lang.code}
-              style={[
-                styles.languageCard,
-                selectedLang === lang.code && styles.selectedCard,
-              ]}
-              onPress={() => setSelectedLang(lang.code)}
-              activeOpacity={0.7}
-              disabled={loading}
-            >
-              <Text style={styles.flag}>{lang.flag}</Text>
-              <View style={styles.textContainer}>
-                <Text style={styles.languageName}>{lang.name}</Text>
-                <Text style={styles.nativeName}>{lang.native}</Text>
-              </View>
-              {selectedLang === lang.code && (
-                <View style={styles.checkIconContainer}>
-                  <Icon name="check-circle" size={24} color="#4caf50" />
-                </View>
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleContinue}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color="#1565c0" size="large" />
+            ) : (
+              <>
+                <Text style={styles.buttonText}>Continue to Home</Text>
+                <Icon name="arrow-right" size={24} color="#1565c0" />
+              </>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
 
-        <TouchableOpacity
-          style={[
-            styles.continueButton,
-            (!selectedLang || loading) && styles.continueButtonDisabled,
-          ]}
-          onPress={handleContinue}
-          disabled={loading || !selectedLang}
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#1565C0" />
-          ) : (
-            <Text style={styles.continueButtonText}>Continue to Home</Text>
-          )}
-        </TouchableOpacity>
-
-        {loading && (
-          <View style={styles.loaderOverlay}>
-            <ActivityIndicator size="large" color="#fff" />
-            <Text style={styles.loaderText}>Setting up your language...</Text>
-          </View>
+        {!selected && !loading && (
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={handleSkip}
+            activeOpacity={0.6}
+          >
+            <Text style={styles.skipText}>Skip for now (English)</Text>
+          </TouchableOpacity>
         )}
-      </View>
+      </Animated.View>
     </ImageBackground>
   );
-};
+}
 
-export default LanguageScreen;
-
-// ---- Styles remain the same ----
 const styles = StyleSheet.create({
-  backgroundImage: { flex: 1, width: '100%', height: '100%' },
-  overlay: { flex: 1, backgroundColor: 'rgba(21, 101, 192, 0.97)', padding: 20 },
-  header: { alignItems: 'center', marginTop: 60, marginBottom: 30 },
-  headerIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-    borderWidth: 2,
-    borderColor: '#fff',
+  background: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
-  headerTitle: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 5 },
-  headerSubtitle: { fontSize: 16, color: 'rgba(255, 255, 255, 0.8)' },
-  languageContainer: { flex: 1, marginBottom: 20 },
-  languageCard: {
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(21,101,192,0.97)',
+    padding: 20,
+  },
+  header: {
+    fontSize: 32,
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 50,
+    marginBottom: 20,
+    letterSpacing: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    marginVertical: 20,
+  },
+  langContainer: {
+    width: '100%',
+    paddingHorizontal: 10,
+  },
+  card: {
     flexDirection: 'row',
     backgroundColor: '#fff',
     padding: 20,
@@ -192,43 +286,62 @@ const styles = StyleSheet.create({
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  selectedCard: {
-    borderWidth: 3,
+  selected: {
+    borderWidth: 2,
     borderColor: '#4caf50',
-    backgroundColor: '#f0fff0',
-    transform: [{ scale: 1.02 }],
+    backgroundColor: '#f0f9f0',
+    elevation: 8,
+    shadowColor: '#4caf50',
+    shadowOpacity: 0.3,
   },
-  flag: { fontSize: 30, marginRight: 15 },
-  textContainer: { flex: 1 },
-  languageName: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  nativeName: { fontSize: 14, color: '#666', marginTop: 2 },
-  checkIconContainer: { marginLeft: 10 },
-  continueButton: {
+  flag: {
+    fontSize: 32,
+    marginRight: 15,
+  },
+  langName: {
+    fontSize: 20,
+    fontWeight: '600',
+    flex: 1,
+    color: '#333',
+  },
+  button: {
     backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
+    padding: 18,
+    borderRadius: 15,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 15,
+    marginHorizontal: 10,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-  },
-  continueButtonDisabled: { backgroundColor: 'rgba(255, 255, 255, 0.5)', elevation: 0 },
-  continueButtonText: { color: '#1565C0', fontSize: 18, fontWeight: 'bold' },
-  loaderOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  loaderText: { color: '#fff', marginTop: 10, fontSize: 16 },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    color: '#1565c0',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginRight: 10,
+  },
+  skipButton: {
+    alignItems: 'center',
+    marginBottom: 20,
+    padding: 10,
+  },
+  skipText: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 16,
+    textDecorationLine: 'underline',
+    fontWeight: '500',
+  },
 });
