@@ -1,132 +1,185 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+// screens/FareScreen.js
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+const FARE_DATA = [
+  { distance: '0-2 km', fare: 5 },
+  { distance: '2-5 km', fare: 10 },
+  { distance: '5-10 km', fare: 15 },
+  { distance: '10-15 km', fare: 20 },
+  { distance: '15-20 km', fare: 25 },
+  { distance: '20-25 km', fare: 30 },
+  { distance: '25+ km', fare: 35 },
+];
+
+const DISCOUNTS = [
+  { type: 'Student', discount: '50%', validity: 'Valid on weekdays' },
+  { type: 'Senior Citizen', discount: '40%', validity: 'Valid all days' },
+  { type: 'Monthly Pass', discount: '30%', validity: '30 days validity' },
+  { type: 'Group Booking', discount: '20%', validity: 'Min 5 persons' },
+];
 
 export default function FareScreen() {
-
-  const [source, setSource] = useState("");
-  const [destination, setDestination] = useState("");
-
-  // Simple Fare Logic
-  const calculateFare = () => {
-
-    if (source === "" || destination === "") {
-      Alert.alert("Error", "Please select source and destination");
-      return;
-    }
-
-    if (source === destination) {
-      Alert.alert("Error", "Source and Destination cannot be same");
-      return;
-    }
-
-    let fare = 10;
-
-    const routes = {
-      "Station-Adajan": 15,
-      "Station-Vesu": 20,
-      "Adajan-Vesu": 12
-    };
-
-    const key1 = `${source}-${destination}`;
-    const key2 = `${destination}-${source}`;
-
-    if (routes[key1]) fare = routes[key1];
-    else if (routes[key2]) fare = routes[key2];
-
-    Alert.alert("Bus Fare", `Fare from ${source} to ${destination} is ₹${fare}`);
-  };
-
   return (
-    <View style={styles.container}>
-
-      <Text style={styles.title}>Fare Chart</Text>
-
-      {/* Source Picker */}
-      <View style={styles.pickerBox}>
-        <Icon name="trip-origin" size={20} color="#333" />
-        <Picker
-          selectedValue={source}
-          style={styles.picker}
-          onValueChange={(itemValue) => setSource(itemValue)}
-        >
-          <Picker.Item label="Select Source" value="" />
-          <Picker.Item label="Station" value="Station" />
-          <Picker.Item label="Adajan" value="Adajan" />
-          <Picker.Item label="Vesu" value="Vesu" />
-        </Picker>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Icon name="currency-inr" size={50} color="#1565c0" />
+        <Text style={styles.title}>Fare Chart</Text>
+        <Text style={styles.subtitle}>Standard fare structure</Text>
       </View>
 
-      {/* Destination Picker */}
-      <View style={styles.pickerBox}>
-        <Icon name="location-on" size={20} color="#333" />
-        <Picker
-          selectedValue={destination}
-          style={styles.picker}
-          onValueChange={(itemValue) => setDestination(itemValue)}
-        >
-          <Picker.Item label="Select Destination" value="" />
-          <Picker.Item label="Station" value="Station" />
-          <Picker.Item label="Adajan" value="Adajan" />
-          <Picker.Item label="Vesu" value="Vesu" />
-        </Picker>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Distance Based Fare</Text>
+        {FARE_DATA.map((item, index) => (
+          <View key={index} style={styles.fareRow}>
+            <Text style={styles.distanceText}>{item.distance}</Text>
+            <Text style={styles.fareText}>₹{item.fare}</Text>
+          </View>
+        ))}
       </View>
 
-      {/* See Fare Button */}
-      <TouchableOpacity style={styles.buttonFare} onPress={calculateFare}>
-        <Icon name="attach-money" size={22} color="#fff" />
-        <Text style={styles.buttonText}>See Fare</Text>
-      </TouchableOpacity>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Special Discounts</Text>
+        {DISCOUNTS.map((item, index) => (
+          <View key={index} style={styles.discountRow}>
+            <View style={styles.discountIcon}>
+              <Icon name="percent" size={20} color="#1565c0" />
+            </View>
+            <View style={styles.discountInfo}>
+              <Text style={styles.discountType}>{item.type}</Text>
+              <Text style={styles.discountValidity}>{item.validity}</Text>
+            </View>
+            <Text style={styles.discountValue}>{item.discount}</Text>
+          </View>
+        ))}
+      </View>
 
-    </View>
+      <View style={styles.noteCard}>
+        <Icon name="information" size={24} color="#1565c0" />
+        <Text style={styles.noteText}>
+          *Fares are subject to change. Digital payments get 5% extra discount.
+        </Text>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
-    padding: 20,
-    justifyContent: "center",
-    backgroundColor: "#fff"
+    backgroundColor: '#f5f5f5',
   },
-
+  header: {
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 30
+    fontWeight: 'bold',
+    color: '#1565c0',
+    marginTop: 10,
   },
-
-  pickerBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    marginBottom: 20,
-    paddingHorizontal: 10
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
   },
-
-  picker: {
-    flex: 1
-  },
-
-  buttonFare: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#28A745",
+  card: {
+    backgroundColor: '#fff',
+    margin: 15,
+    marginTop: 10,
     padding: 15,
-    borderRadius: 8,
-    justifyContent: "center"
+    borderRadius: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
-
-  buttonText: {
-    color: "#fff",
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    paddingBottom: 10,
+  },
+  fareRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  distanceText: {
     fontSize: 16,
+    color: '#666',
+  },
+  fareText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1565c0',
+  },
+  discountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  discountIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#e3f2fd',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  discountInfo: {
+    flex: 1,
+  },
+  discountType: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  discountValidity: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 2,
+  },
+  discountValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#28a745',
+  },
+  noteCard: {
+    flexDirection: 'row',
+    backgroundColor: '#e3f2fd',
+    margin: 15,
+    marginTop: 5,
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  noteText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#1565c0',
     marginLeft: 10,
-    fontWeight: "600"
-  }
-
+    fontStyle: 'italic',
+  },
 });

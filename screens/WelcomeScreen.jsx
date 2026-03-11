@@ -14,8 +14,6 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const { width, height } = Dimensions.get('window');
-const isSmallDevice = width < 375;
-const isTablet = width >= 768;
 
 export default function WelcomeScreen({ navigation }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -45,7 +43,7 @@ export default function WelcomeScreen({ navigation }) {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [fadeAnim, slideAnim, scaleAnim]);
+  }, []);
 
   const handleButtonPress = () => {
     Animated.sequence([
@@ -84,11 +82,7 @@ export default function WelcomeScreen({ navigation }) {
           ]}
         >
           <View style={styles.iconContainer}>
-            <Icon 
-              name="bus" 
-              size={isTablet ? 120 : isSmallDevice ? 70 : 100} 
-              color="#fff" 
-            />
+            <Icon name="bus" size={80} color="#fff" />
           </View>
           
           <Text style={styles.title}>BRTSConnect</Text>
@@ -107,18 +101,9 @@ export default function WelcomeScreen({ navigation }) {
               activeOpacity={0.8}
             >
               <Text style={styles.buttonText}>Get Started</Text>
-              <Icon 
-                name="arrow-right" 
-                size={isTablet ? 28 : 24} 
-                color="#1565c0" 
-              />
+              <Icon name="arrow-right" size={24} color="#1565c0" />
             </TouchableOpacity>
           </Animated.View>
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Powered by Surat BRTS</Text>
-            <Text style={styles.footerText}>© 2024 All Rights Reserved</Text>
-          </View>
         </Animated.View>
       </View>
     </ImageBackground>
@@ -128,8 +113,8 @@ export default function WelcomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
-    width: width,
-    height: height,
+    width: '100%',
+    height: '100%',
   },
   overlay: {
     flex: 1,
@@ -139,132 +124,76 @@ const styles = StyleSheet.create({
   },
   content: {
     alignItems: 'center',
-    paddingHorizontal: width * 0.05,
+    paddingHorizontal: 20,
     width: '100%',
-    maxWidth: 600,
   },
   iconContainer: {
-    width: width * 0.4,
-    height: width * 0.4,
-    maxWidth: 180,
-    maxHeight: 180,
-    borderRadius: width * 0.2,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: height * 0.03,
-    borderWidth: Platform.OS === 'ios' ? 3 : 2,
+    marginBottom: 20,
+    borderWidth: 2,
     borderColor: '#fff',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
   },
   title: {
-    fontSize: Math.min(width * 0.12, 48),
+    fontSize: 40,
     fontWeight: 'bold',
     color: '#fff',
     letterSpacing: 2,
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 5,
-    ...Platform.select({
-      ios: {
-        fontFamily: 'System',
-        fontWeight: '700',
-      },
-      android: {
-        fontFamily: 'sans-serif-bold',
-      },
-    }),
   },
   subtitle: {
-    fontSize: Math.min(width * 0.07, 28),
+    fontSize: 24,
     color: '#fff',
-    marginTop: height * 0.005,
+    marginTop: 5,
     opacity: 0.9,
     fontWeight: '600',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
   },
   taglineContainer: {
-    marginTop: height * 0.04,
+    marginTop: 30,
     alignItems: 'center',
   },
   tagline: {
-    fontSize: Math.min(width * 0.045, 18),
+    fontSize: 16,
     color: '#fff',
-    marginVertical: height * 0.003,
+    marginVertical: 2,
     opacity: 0.9,
     fontWeight: '500',
-    textAlign: 'center',
   },
   taglineHindi: {
-    fontSize: Math.min(width * 0.04, 16),
+    fontSize: 15,
     color: '#fff',
-    marginVertical: height * 0.002,
+    marginVertical: 2,
     opacity: 0.8,
-    textAlign: 'center',
   },
   taglineGujarati: {
-    fontSize: Math.min(width * 0.04, 16),
+    fontSize: 15,
     color: '#fff',
-    marginVertical: height * 0.002,
+    marginVertical: 2,
     opacity: 0.8,
-    textAlign: 'center',
   },
   getStartedButton: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    paddingHorizontal: width * 0.1,
-    paddingVertical: height * 0.02,
-    minWidth: width * 0.5,
-    maxWidth: 400,
-    borderRadius: 50,
-    marginTop: height * 0.06,
+    paddingHorizontal: 40,
+    paddingVertical: 15,
+    borderRadius: 30,
+    marginTop: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-      },
-      android: {
-        elevation: 10,
-      },
-    }),
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
   buttonText: {
     color: '#1565c0',
-    fontSize: Math.min(width * 0.05, 20),
+    fontSize: 18,
     fontWeight: 'bold',
-    marginRight: width * 0.02,
-    textAlign: 'center',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: -height * 0.25,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    paddingHorizontal: width * 0.05,
-  },
-  footerText: {
-    color: '#fff',
-    fontSize: Math.min(width * 0.035, 14),
-    opacity: 0.7,
-    marginVertical: height * 0.002,
-    textAlign: 'center',
+    marginRight: 10,
   },
 });

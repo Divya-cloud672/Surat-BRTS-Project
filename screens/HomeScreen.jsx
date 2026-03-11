@@ -1,4 +1,4 @@
-// screens/HomeScreen.jsx
+// screens/HomeScreen.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -11,8 +11,10 @@ import {
   Dimensions,
   Platform,
   StatusBar,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 const isSmallDevice = width < 375;
@@ -51,29 +53,46 @@ export default function HomeScreen({ navigation }) {
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
   const [searchText, setSearchText] = useState('');
+  const [userName, setUserName] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState('');
 
   useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      let hours = now.getHours();
-      const minutes = now.getMinutes();
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12;
-      const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes
-        .toString()
-        .padStart(2, '0')} ${ampm}`;
-
-      const options = { day: '2-digit', month: 'long', year: 'numeric' };
-      const formattedDate = now.toLocaleDateString('en-US', options);
-
-      setCurrentTime(formattedTime);
-      setCurrentDate(formattedDate);
-    };
-    
     updateTime();
+    getUserData();
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  const updateTime = () => {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes
+      .toString()
+      .padStart(2, '0')} ${ampm}`;
+
+    const options = { day: '2-digit', month: 'long', year: 'numeric' };
+    const formattedDate = now.toLocaleDateString('en-US', options);
+
+    setCurrentTime(formattedTime);
+    setCurrentDate(formattedDate);
+  };
+
+  const getUserData = async () => {
+    try {
+      const language = await AsyncStorage.getItem('languageName');
+      if (language) {
+        setSelectedLanguage(language);
+      }
+      // You can also get user name if you have it stored
+      // const name = await AsyncStorage.getItem('userName');
+      // setUserName(name || '');
+    } catch (error) {
+      console.log('Error getting user data:', error);
+    }
+  };
 
   const menuItems = [
     {
@@ -123,6 +142,33 @@ export default function HomeScreen({ navigation }) {
   const handleSearch = (text) => {
     setSearchText(text);
     // Implement search functionality here
+    if (text.length > 2) {
+      // You can add search logic here
+      console.log('Searching for:', text);
+    }
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Logout', 
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('userLanguage');
+              await AsyncStorage.removeItem('languageName');
+              navigation.replace('Welcome');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to logout');
+            }
+          },
+          style: 'destructive'
+        },
+      ]
+    );
   };
 
   return (
@@ -149,16 +195,22 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.headerSubText}>Surat • Smart City</Text>
             </View>
           </View>
-          <TouchableOpacity 
-            style={styles.profileButton}
-            activeOpacity={0.7}
-          >
-            <Icon 
-              name="account-circle" 
-              size={responsiveFontSize(32)} 
-              color="#fff" 
-            />
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            {selectedLanguage ? (
+              <Text style={styles.languageBadge}>{selectedLanguage}</Text>
+            ) : null}
+            <TouchableOpacity 
+              style={styles.profileButton}
+              activeOpacity={0.7}
+              onPress={handleLogout}
+            >
+              <Icon 
+                name="logout" 
+                size={responsiveFontSize(24)} 
+                color="#fff" 
+              />
+            </TouchableOpacity>
+          </View>
         </View>
         
         {/* Hero Section */}
@@ -169,7 +221,7 @@ export default function HomeScreen({ navigation }) {
         >
           <View style={styles.heroOverlay} />
           <View style={styles.heroContent}>
-            <Text style={styles.greeting}>Good {getGreeting()}</Text>
+            <Text style={styles.greeting}>Good {getGreeting()}{userName ? `, ${userName}` : ''}</Text>
             <Text style={styles.time}>{currentTime}</Text>
             <Text style={styles.date}>{currentDate}</Text>
           </View>
@@ -186,6 +238,14 @@ export default function HomeScreen({ navigation }) {
               value={searchText}
               onChangeText={handleSearch}
             />
+            {searchText.length > 0 && (
+              <TouchableOpacity 
+                style={styles.clearButton}
+                onPress={() => setSearchText('')}
+              >
+                <Icon name="close-circle" size={responsiveFontSize(20)} color="#999" />
+              </TouchableOpacity>
+            )}
             <TouchableOpacity 
               style={styles.filterButton}
               activeOpacity={0.7}
@@ -291,6 +351,20 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     marginTop: 2,
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  languageBadge: {
+    color: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: responsiveWidth(2),
+    paddingVertical: responsiveHeight(0.5),
+    borderRadius: 15,
+    fontSize: responsiveFontSize(12),
+    marginRight: responsiveWidth(2),
+    overflow: 'hidden',
+  },
   profileButton: {
     padding: responsiveWidth(1.5),
   },
@@ -357,6 +431,10 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#333',
     paddingVertical: responsiveHeight(1.2),
+  },
+  clearButton: {
+    padding: responsiveWidth(1),
+    marginRight: responsiveWidth(1),
   },
   filterButton: {
     padding: responsiveWidth(2),
