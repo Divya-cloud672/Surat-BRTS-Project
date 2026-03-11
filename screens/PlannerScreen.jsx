@@ -3,71 +3,18 @@ import {
   View,
   Text,
   TextInput,
-  Button,
-  StyleSheet,
-  FlatList,
   TouchableOpacity,
+  FlatList,
+  ScrollView,
   ActivityIndicator,
   Alert,
-  ScrollView
+  StyleSheet,
 } from 'react-native';
 
-// Sample bus data - In real app, this would come from an API
-const SAMPLE_BUSES = [
-  {
-    id: '1',
-    busNumber: '101',
-    route: 'City Center - North Station',
-    stops: ['City Center', 'Main Street', 'Park Avenue', 'North Station'],
-    fare: 25,
-    duration: '25 mins',
-    frequency: 'Every 15 mins'
-  },
-  {
-    id: '2',
-    busNumber: '202',
-    route: 'South Mall - East End',
-    stops: ['South Mall', 'Market Square', 'East End'],
-    fare: 20,
-    duration: '20 mins',
-    frequency: 'Every 20 mins'
-  },
-  {
-    id: '3',
-    busNumber: '305',
-    route: 'Westside - Downtown',
-    stops: ['Westside', 'Central Park', 'Downtown'],
-    fare: 30,
-    duration: '30 mins',
-    frequency: 'Every 10 mins'
-  },
-  {
-    id: '4',
-    busNumber: '405',
-    route: 'Airport - Railway Station',
-    stops: ['Airport', 'Bus Terminal', 'Railway Station'],
-    fare: 40,
-    duration: '35 mins',
-    frequency: 'Every 30 mins'
-  }
-];
-
-// Sample search suggestions
-const SAMPLE_STOPS = [
-  'City Center',
-  'North Station',
-  'South Mall',
-  'East End',
-  'Westside',
-  'Downtown',
-  'Airport',
-  'Railway Station',
-  'Main Street',
-  'Park Avenue',
-  'Market Square',
-  'Central Park',
-  'Bus Terminal'
-];
+// Import your dataset
+import routes from '../data/routes.json';
+import stops from '../data/stops.json';
+import routeStops from '../data/routesStops.json';
 
 export default function PlannerScreen() {
   const [startStop, setStartStop] = useState('');
@@ -79,12 +26,14 @@ export default function PlannerScreen() {
   const [filteredStartStops, setFilteredStartStops] = useState([]);
   const [filteredEndStops, setFilteredEndStops] = useState([]);
 
-  // Filter suggestions based on input
+  // All stop names
+  const ALL_STOPS = stops.stops.map(s => s.name);
+
+  // Filter suggestions
   const filterSuggestions = (text, type) => {
-    const filtered = SAMPLE_STOPS.filter(stop =>
-      stop.toLowerCase().includes(text.toLowerCase())
+    const filtered = ALL_STOPS.filter(stop =>
+      stop.toLowerCase().includes(text.toLowerCase()),
     );
-    
     if (type === 'start') {
       setFilteredStartStops(filtered);
       setShowStartSuggestions(true);
@@ -94,7 +43,7 @@ export default function PlannerScreen() {
     }
   };
 
-  // Handle suggestion selection
+  // Select suggestion
   const selectSuggestion = (stop, type) => {
     if (type === 'start') {
       setStartStop(stop);
@@ -105,7 +54,7 @@ export default function PlannerScreen() {
     }
   };
 
-  // Search for available buses
+  // Search buses using dataset
   const searchBuses = () => {
     if (!startStop.trim() || !endStop.trim()) {
       Alert.alert('Error', 'Please enter both start and end stops');
@@ -113,28 +62,85 @@ export default function PlannerScreen() {
     }
 
     setIsSearching(true);
-    
-    // Simulate API call
+
     setTimeout(() => {
-      // Filter buses that have both stops in their route
-      const buses = SAMPLE_BUSES.filter(bus => {
-        const stopsLower = bus.stops.map(stop => stop.toLowerCase());
-        return stopsLower.includes(startStop.toLowerCase()) && 
-               stopsLower.includes(endStop.toLowerCase());
+      // Find stop IDs
+      const start = stops.stops.find(
+        s => s.name.toLowerCase() === startStop.toLowerCase(),
+      );
+      const end = stops.stops.find(
+        s => s.name.toLowerCase() === endStop.toLowerCase(),
+      );
+
+      if (!start || !end) {
+        setIsSearching(false);
+        Alert.alert(
+          'Stop Not Found',
+          'One of the stops does not exist in dataset',
+        );
+        return;
+      }
+
+      // Filter routeStops
+      const resultRoutes = routeStops.routeStops.filter(route => {
+        const startIndex = route.stops.indexOf(start.id);
+        const endIndex = route.stops.indexOf(end.id);
+        return startIndex !== -1 && endIndex !== -1 && startIndex < endIndex;
+      });
+
+      // Map to display data
+      const buses = resultRoutes.map(route => {
+        const routeInfo = routes.routes.find(r => r.id === route.route_id);
+        return {
+          id: route.route_id,
+          busNumber: route.route_id,
+          route: routeInfo?.name || 'Unknown Route',
+          stops: route.stops.map(
+            id => stops.stops.find(s => s.id === id)?.name,
+          ),
+          fare: 20, // You can customize fare
+          duration: '25 mins',
+          frequency: 'Every 15 mins',
+        };
       });
 
       setAvailableBuses(buses);
       setIsSearching(false);
-      
+
       if (buses.length === 0) {
-        Alert.alert('No Buses Found', 'No direct buses available for this route');
+        Alert.alert(
+          'No Buses Found',
+          'No direct buses available for this route',
+        );
       }
-    }, 1500);
+    }, 800);
+  };
+
+  // Show bus details on press
+  const showBusDetails = bus => {
+    const startIndex = bus.stops.findIndex(
+      s => s.toLowerCase() === startStop.toLowerCase(),
+    );
+    const endIndex = bus.stops.findIndex(
+      s => s.toLowerCase() === endStop.toLowerCase(),
+    );
+    if (startIndex !== -1 && endIndex !== -1) {
+      const stopsBetween = bus.stops.slice(startIndex, endIndex + 1);
+      Alert.alert(
+        `Bus ${bus.busNumber} Details`,
+        `Route: ${bus.route}\n\n` +
+          `Your Journey: ${startStop} → ${endStop}\n` +
+          `Stops: ${stopsBetween.join(' → ')}\n\n` +
+          `Fare: ₹${bus.fare}\n` +
+          `Duration: ${bus.duration}\n` +
+          `Frequency: ${bus.frequency}`,
+      );
+    }
   };
 
   // Render each bus item
   const renderBusItem = ({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.busCard}
       onPress={() => showBusDetails(item)}
     >
@@ -144,9 +150,9 @@ export default function PlannerScreen() {
           <Text style={styles.busBadgeText}>{item.frequency}</Text>
         </View>
       </View>
-      
+
       <Text style={styles.routeText}>{item.route}</Text>
-      
+
       <View style={styles.stopsContainer}>
         <Text style={styles.stopsLabel}>Route Stops:</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -162,7 +168,7 @@ export default function PlannerScreen() {
           </View>
         </ScrollView>
       </View>
-      
+
       <View style={styles.busFooter}>
         <Text style={styles.fareText}>Fare: ₹{item.fare}</Text>
         <Text style={styles.durationText}>Duration: {item.duration}</Text>
@@ -170,50 +176,29 @@ export default function PlannerScreen() {
     </TouchableOpacity>
   );
 
-  // Show bus details
-  const showBusDetails = (bus) => {
-    const startIndex = bus.stops.findIndex(stop => 
-      stop.toLowerCase() === startStop.toLowerCase()
-    );
-    const endIndex = bus.stops.findIndex(stop => 
-      stop.toLowerCase() === endStop.toLowerCase()
-    );
-    
-    if (startIndex !== -1 && endIndex !== -1) {
-      const stopsBetween = bus.stops.slice(startIndex, endIndex + 1);
-      Alert.alert(
-        `Bus ${bus.busNumber} Details`,
-        `Route: ${bus.route}\n\n` +
-        `Your Journey: ${startStop} to ${endStop}\n` +
-        `Stops: ${stopsBetween.join(' → ')}\n\n` +
-        `Fare: ₹${bus.fare}\n` +
-        `Duration: ${bus.duration}\n` +
-        `Frequency: ${bus.frequency}`
-      );
-    }
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Bus Route Planner</Text>
-      
-      {/* Start Stop Input with Suggestions */}
+
+      {/* Start Stop Input */}
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Enter Start Stop"
           placeholderTextColor="#999"
           value={startStop}
-          onChangeText={(text) => {
+          onChangeText={text => {
             setStartStop(text);
             filterSuggestions(text, 'start');
           }}
           onFocus={() => setShowStartSuggestions(true)}
           style={styles.input}
         />
-        
         {showStartSuggestions && filteredStartStops.length > 0 && (
           <View style={styles.suggestionsContainer}>
-            <ScrollView nestedScrollEnabled={true} style={styles.suggestionsList}>
+            <ScrollView
+              nestedScrollEnabled={true}
+              style={styles.suggestionsList}
+            >
               {filteredStartStops.map((stop, index) => (
                 <TouchableOpacity
                   key={index}
@@ -228,23 +213,25 @@ export default function PlannerScreen() {
         )}
       </View>
 
-      {/* End Stop Input with Suggestions */}
+      {/* End Stop Input */}
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Enter End Stop"
           placeholderTextColor="#999"
           value={endStop}
-          onChangeText={(text) => {
+          onChangeText={text => {
             setEndStop(text);
             filterSuggestions(text, 'end');
           }}
           onFocus={() => setShowEndSuggestions(true)}
           style={styles.input}
         />
-        
         {showEndSuggestions && filteredEndStops.length > 0 && (
           <View style={styles.suggestionsContainer}>
-            <ScrollView nestedScrollEnabled={true} style={styles.suggestionsList}>
+            <ScrollView
+              nestedScrollEnabled={true}
+              style={styles.suggestionsList}
+            >
               {filteredEndStops.map((stop, index) => (
                 <TouchableOpacity
                   key={index}
@@ -259,10 +246,11 @@ export default function PlannerScreen() {
         )}
       </View>
 
+      {/* Search Button */}
       <TouchableOpacity
         style={[
           styles.searchButton,
-          (!startStop || !endStop) && styles.searchButtonDisabled
+          (!startStop || !endStop) && styles.searchButtonDisabled,
         ]}
         onPress={searchBuses}
         disabled={!startStop || !endStop || isSearching}
@@ -274,7 +262,7 @@ export default function PlannerScreen() {
         )}
       </TouchableOpacity>
 
-      {/* Results Section */}
+      {/* Available Buses */}
       {availableBuses.length > 0 && (
         <View style={styles.resultsContainer}>
           <Text style={styles.resultsTitle}>
@@ -283,7 +271,7 @@ export default function PlannerScreen() {
           <FlatList
             data={availableBuses}
             renderItem={renderBusItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={item => item.id}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
           />
@@ -294,11 +282,7 @@ export default function PlannerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-  },
+  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -306,11 +290,7 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
   },
-  inputContainer: {
-    marginBottom: 15,
-    position: 'relative',
-    zIndex: 1,
-  },
+  inputContainer: { marginBottom: 15, position: 'relative', zIndex: 1 },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
@@ -337,18 +317,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  suggestionsList: {
-    maxHeight: 200,
-  },
+  suggestionsList: { maxHeight: 200 },
   suggestionItem: {
     padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  suggestionText: {
-    fontSize: 14,
-    color: '#333',
-  },
+  suggestionText: { fontSize: 14, color: '#333' },
   searchButton: {
     backgroundColor: '#007AFF',
     padding: 15,
@@ -357,26 +332,16 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
   },
-  searchButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  searchButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  resultsContainer: {
-    flex: 1,
-  },
+  searchButtonDisabled: { backgroundColor: '#ccc' },
+  searchButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  resultsContainer: { flex: 1 },
   resultsTitle: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 15,
     color: '#333',
   },
-  listContent: {
-    paddingBottom: 20,
-  },
+  listContent: { paddingBottom: 20 },
   busCard: {
     backgroundColor: '#fff',
     borderRadius: 15,
@@ -394,54 +359,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  busNumber: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
+  busNumber: { fontSize: 18, fontWeight: 'bold', color: '#007AFF' },
   busBadge: {
     backgroundColor: '#e3f2fd',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 15,
   },
-  busBadgeText: {
-    color: '#007AFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  routeText: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 10,
-  },
-  stopsContainer: {
-    marginBottom: 10,
-  },
+  busBadgeText: { color: '#007AFF', fontSize: 12, fontWeight: '600' },
+  routeText: { fontSize: 16, color: '#333', marginBottom: 10 },
+  stopsContainer: { marginBottom: 10 },
   stopsLabel: {
     fontSize: 14,
     fontWeight: '600',
     color: '#666',
     marginBottom: 5,
   },
-  stopsList: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  stopItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  stopText: {
-    fontSize: 14,
-    color: '#555',
-  },
-  arrow: {
-    fontSize: 14,
-    color: '#999',
-    marginHorizontal: 5,
-  },
+  stopsList: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
+  stopItem: { flexDirection: 'row', alignItems: 'center' },
+  stopText: { fontSize: 14, color: '#555' },
+  arrow: { fontSize: 14, color: '#999', marginHorizontal: 5 },
   busFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -450,13 +387,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
   },
-  fareText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#28a745',
-  },
-  durationText: {
-    fontSize: 14,
-    color: '#666',
-  },
+  fareText: { fontSize: 14, fontWeight: '600', color: '#28a745' },
+  durationText: { fontSize: 14, color: '#666' },
 });

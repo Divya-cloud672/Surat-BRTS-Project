@@ -5,9 +5,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   ScrollView,
-  ImageBackground,
   Dimensions,
   Platform,
   StatusBar,
@@ -18,13 +16,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 const isSmallDevice = width < 375;
-const isMediumDevice = width >= 375 && width < 768;
 const isLargeDevice = width >= 768;
 
 // Responsive sizing functions
 const responsiveFontSize = (size) => {
-  if (isLargeDevice) return size * 1.2;
-  if (isSmallDevice) return size * 0.9;
+  if (isLargeDevice) return size * 1.1;
+  if (isSmallDevice) return size * 0.85;
   return size;
 };
 
@@ -36,49 +33,15 @@ const responsiveHeight = (percentage) => {
   return (height * percentage) / 100;
 };
 
-const cardWidth = isLargeDevice 
-  ? responsiveWidth(28) // 28% for tablets
-  : responsiveWidth(44); // 44% for phones
-
-// Helper function for greeting
-const getGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Morning';
-  if (hour < 17) return 'Afternoon';
-  if (hour < 20) return 'Evening';
-  return 'Night';
-};
+// Calculate card width for 2 columns with optimal spacing
+const cardWidth = (width - responsiveWidth(8) - responsiveWidth(2.5)) / 2; // Screen width - (horizontal padding + gap)
 
 export default function HomeScreen({ navigation }) {
-  const [currentTime, setCurrentTime] = useState('');
-  const [currentDate, setCurrentDate] = useState('');
-  const [searchText, setSearchText] = useState('');
-  const [userName, setUserName] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('');
 
   useEffect(() => {
-    updateTime();
     getUserData();
-    const interval = setInterval(updateTime, 60000);
-    return () => clearInterval(interval);
   }, []);
-
-  const updateTime = () => {
-    const now = new Date();
-    let hours = now.getHours();
-    const minutes = now.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12;
-    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes
-      .toString()
-      .padStart(2, '0')} ${ampm}`;
-
-    const options = { day: '2-digit', month: 'long', year: 'numeric' };
-    const formattedDate = now.toLocaleDateString('en-US', options);
-
-    setCurrentTime(formattedTime);
-    setCurrentDate(formattedDate);
-  };
 
   const getUserData = async () => {
     try {
@@ -86,9 +49,6 @@ export default function HomeScreen({ navigation }) {
       if (language) {
         setSelectedLanguage(language);
       }
-      // You can also get user name if you have it stored
-      // const name = await AsyncStorage.getItem('userName');
-      // setUserName(name || '');
     } catch (error) {
       console.log('Error getting user data:', error);
     }
@@ -139,15 +99,6 @@ export default function HomeScreen({ navigation }) {
     },
   ];
 
-  const handleSearch = (text) => {
-    setSearchText(text);
-    // Implement search functionality here
-    if (text.length > 2) {
-      // You can add search logic here
-      console.log('Searching for:', text);
-    }
-  };
-
   const handleLogout = () => {
     Alert.alert(
       'Logout',
@@ -187,7 +138,7 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.headerLeft}>
             <Icon 
               name="bus" 
-              size={responsiveFontSize(32)} 
+              size={responsiveFontSize(28)} 
               color="#fff" 
             />
             <View style={styles.headerTextContainer}>
@@ -196,9 +147,11 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
           <View style={styles.headerRight}>
-            {selectedLanguage ? (
-              <Text style={styles.languageBadge}>{selectedLanguage}</Text>
-            ) : null}
+            {selectedLanguage && (
+              <View style={styles.languageBadge}>
+                <Text style={styles.languageBadgeText}>{selectedLanguage}</Text>
+              </View>
+            )}
             <TouchableOpacity 
               style={styles.profileButton}
               activeOpacity={0.7}
@@ -206,86 +159,29 @@ export default function HomeScreen({ navigation }) {
             >
               <Icon 
                 name="logout" 
-                size={responsiveFontSize(24)} 
+                size={responsiveFontSize(22)} 
                 color="#fff" 
               />
             </TouchableOpacity>
           </View>
         </View>
-        
-        {/* Hero Section */}
-        <ImageBackground
-          source={require('../assets/images/bus4.jpg')}
-          style={styles.heroSection}
-          imageStyle={styles.heroImage}
-        >
-          <View style={styles.heroOverlay} />
-          <View style={styles.heroContent}>
-            <Text style={styles.greeting}>Good {getGreeting()}{userName ? `, ${userName}` : ''}</Text>
-            <Text style={styles.time}>{currentTime}</Text>
-            <Text style={styles.date}>{currentDate}</Text>
-          </View>
-        </ImageBackground>
 
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBox}>
-            <Icon name="magnify" size={responsiveFontSize(22)} color="#666" />
-            <TextInput
-              placeholder="Search bus route or stop..."
-              style={styles.input}
-              placeholderTextColor="#999"
-              value={searchText}
-              onChangeText={handleSearch}
-            />
-            {searchText.length > 0 && (
-              <TouchableOpacity 
-                style={styles.clearButton}
-                onPress={() => setSearchText('')}
-              >
-                <Icon name="close-circle" size={responsiveFontSize(20)} color="#999" />
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity 
-              style={styles.filterButton}
-              activeOpacity={0.7}
-            >
-              <Icon name="tune" size={responsiveFontSize(22)} color="#666" />
-            </TouchableOpacity>
-          </View>
+        {/* Welcome Message - Compact */}
+        <View style={styles.welcomeContainer}>
+          <Text style={styles.welcomeText}>Welcome to BRTSConnect</Text>
+          <Text style={styles.welcomeSubText}>Select a service to continue</Text>
         </View>
 
-        {/* Quick Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>15</Text>
-            <Text style={styles.statLabel}>Active Routes</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>120+</Text>
-            <Text style={styles.statLabel}>Daily Buses</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>50</Text>
-            <Text style={styles.statLabel}>Bus Stops</Text>
-          </View>
-        </View>
-
-        {/* Menu Grid */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
-        </View>
-
+        {/* Menu Grid - All buttons visible at once */}
         <View style={styles.grid}>
-          {menuItems.map((item) => (
+          {menuItems.map((item, index) => (
             <TouchableOpacity
               key={item.id}
-              style={[styles.card, { backgroundColor: item.color }]}
+              style={[
+                styles.card,
+                { backgroundColor: item.color },
+                index % 2 !== 0 && styles.cardMarginLeft,
+              ]}
               onPress={() => navigation.navigate(item.screen)}
               activeOpacity={0.8}
             >
@@ -293,7 +189,7 @@ export default function HomeScreen({ navigation }) {
                 <View style={styles.iconContainer}>
                   <Icon 
                     name={item.icon} 
-                    size={responsiveFontSize(32)} 
+                    size={responsiveFontSize(28)} 
                     color="#fff" 
                   />
                 </View>
@@ -301,6 +197,12 @@ export default function HomeScreen({ navigation }) {
               </View>
             </TouchableOpacity>
           ))}
+        </View>
+
+        {/* Quick Access Note */}
+        <View style={styles.noteContainer}>
+          <Icon name="information-outline" size={16} color="#666" />
+          <Text style={styles.noteText}>Tap any service to get started</Text>
         </View>
 
         {/* Bottom Padding */}
@@ -323,9 +225,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#1565c0',
-    paddingVertical: responsiveHeight(2),
-    paddingHorizontal: responsiveWidth(5),
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : responsiveHeight(2),
+    paddingVertical: responsiveHeight(1.5),
+    paddingHorizontal: responsiveWidth(4),
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 5 : responsiveHeight(1.5),
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -335,19 +237,20 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   headerTextContainer: {
-    marginLeft: responsiveWidth(3),
+    marginLeft: responsiveWidth(2),
   },
   headerMainText: {
     color: '#fff',
-    fontSize: responsiveFontSize(20),
+    fontSize: responsiveFontSize(18),
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },
   headerSubText: {
     color: '#fff',
-    fontSize: responsiveFontSize(12),
+    fontSize: responsiveFontSize(10),
     opacity: 0.9,
     marginTop: 2,
   },
@@ -356,184 +259,90 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   languageBadge: {
-    color: '#fff',
     backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: responsiveWidth(2),
-    paddingVertical: responsiveHeight(0.5),
-    borderRadius: 15,
-    fontSize: responsiveFontSize(12),
-    marginRight: responsiveWidth(2),
-    overflow: 'hidden',
+    paddingHorizontal: responsiveWidth(2.5),
+    paddingVertical: responsiveHeight(0.3),
+    borderRadius: 12,
+    marginRight: responsiveWidth(1.5),
+  },
+  languageBadgeText: {
+    color: '#fff',
+    fontSize: responsiveFontSize(10),
   },
   profileButton: {
-    padding: responsiveWidth(1.5),
-  },
-  heroSection: {
-    height: responsiveHeight(25),
-    width: '100%',
-    justifyContent: 'flex-end',
-  },
-  heroImage: {
-    resizeMode: 'cover',
-  },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  heroContent: {
-    padding: responsiveWidth(6),
-  },
-  greeting: {
-    fontSize: responsiveFontSize(16),
-    color: '#fff',
-    marginBottom: responsiveHeight(0.7),
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-  },
-  time: {
-    fontSize: responsiveFontSize(38),
-    color: '#fff',
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-  },
-  date: {
-    fontSize: responsiveFontSize(16),
-    color: '#fff',
-    marginTop: responsiveHeight(0.5),
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-  },
-  searchContainer: {
-    paddingHorizontal: responsiveWidth(5),
-    marginTop: -responsiveHeight(3),
-    marginBottom: responsiveHeight(2),
-  },
-  searchBox: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 30,
-    paddingHorizontal: responsiveWidth(4.5),
-    paddingVertical: responsiveHeight(1),
-    elevation: 8,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-  },
-  input: {
-    marginLeft: responsiveWidth(3),
-    fontSize: responsiveFontSize(16),
-    flex: 1,
-    color: '#333',
-    paddingVertical: responsiveHeight(1.2),
-  },
-  clearButton: {
     padding: responsiveWidth(1),
-    marginRight: responsiveWidth(1),
   },
-  filterButton: {
-    padding: responsiveWidth(2),
-    backgroundColor: '#f0f0f0',
-    borderRadius: 20,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    marginHorizontal: responsiveWidth(5),
-    borderRadius: 15,
+  welcomeContainer: {
+    paddingHorizontal: responsiveWidth(4),
     paddingVertical: responsiveHeight(2),
-    marginBottom: responsiveHeight(2.5),
+  },
+  welcomeText: {
+    fontSize: responsiveFontSize(20),
+    fontWeight: 'bold',
+    color: '#1565c0',
+    marginBottom: responsiveHeight(0.3),
+  },
+  welcomeSubText: {
+    fontSize: responsiveFontSize(12),
+    color: '#666',
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: responsiveWidth(4),
+  },
+  card: {
+    width: cardWidth,
+    height: cardWidth * 1.0, // Square cards for compactness
+    borderRadius: 15,
+    marginBottom: responsiveHeight(1.5),
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: responsiveFontSize(22),
-    fontWeight: 'bold',
-    color: '#1565c0',
-  },
-  statLabel: {
-    fontSize: responsiveFontSize(12),
-    color: '#666',
-    marginTop: responsiveHeight(0.5),
-  },
-  statDivider: {
-    width: 1,
-    height: '70%',
-    backgroundColor: '#e0e0e0',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: responsiveWidth(5),
-    marginBottom: responsiveHeight(2),
-  },
-  sectionTitle: {
-    fontSize: responsiveFontSize(20),
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  seeAllText: {
-    fontSize: responsiveFontSize(14),
-    color: '#1565c0',
-    fontWeight: '600',
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: responsiveWidth(5),
-    justifyContent: isLargeDevice ? 'flex-start' : 'space-between',
-    gap: isLargeDevice ? responsiveWidth(3) : 0,
-  },
-  card: {
-    width: cardWidth,
-    height: cardWidth * (isLargeDevice ? 0.8 : 0.9),
-    borderRadius: 20,
-    marginBottom: responsiveHeight(2.5),
-    marginRight: isLargeDevice ? responsiveWidth(2) : 0,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
     overflow: 'hidden',
+  },
+  cardMarginLeft: {
+    marginLeft: responsiveWidth(2.5), // Gap between cards
   },
   cardContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: responsiveWidth(3.5),
+    padding: responsiveWidth(2),
   },
   iconContainer: {
-    width: responsiveWidth(15),
-    height: responsiveWidth(15),
-    maxWidth: 60,
-    maxHeight: 60,
-    borderRadius: responsiveWidth(7.5),
+    width: responsiveWidth(12),
+    height: responsiveWidth(12),
+    maxWidth: 50,
+    maxHeight: 50,
+    borderRadius: responsiveWidth(6),
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: responsiveHeight(1.5),
+    marginBottom: responsiveHeight(1),
   },
   cardText: {
     color: '#fff',
-    fontSize: responsiveFontSize(isLargeDevice ? 16 : 15),
+    fontSize: responsiveFontSize(13),
     fontWeight: '600',
     textAlign: 'center',
   },
+  noteContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: responsiveWidth(4),
+    paddingVertical: responsiveHeight(1.5),
+    marginTop: responsiveHeight(0.5),
+  },
+  noteText: {
+    fontSize: responsiveFontSize(11),
+    color: '#666',
+    marginLeft: 4,
+  },
   bottomPadding: {
-    height: responsiveHeight(2.5),
+    height: responsiveHeight(1),
   },
 });

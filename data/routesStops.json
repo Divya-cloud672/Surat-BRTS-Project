@@ -1,0 +1,9 @@
+{
+  "routeStops":[
+    {"route_id":"R1","stops":[1,2,3,4,5,6,19]},
+    {"route_id":"R2","stops":[3,5,6,7,8]},
+    {"route_id":"R3","stops":[9,4,5,11,12,20]},
+    {"route_id":"R4","stops":[6,11,12,13]},
+    {"route_id":"R5","stops":[14,15,16,9,17,18]}
+  ]
+}

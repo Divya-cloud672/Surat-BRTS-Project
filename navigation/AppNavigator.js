@@ -11,6 +11,7 @@ import MyTicketsScreen from '../screens/TicketScreen';
 import FareScreen from '../screens/FareScreen';
 import MapScreen from '../screens/MapScreen';
 
+
 const Stack = createStackNavigator();
 
 export default function AppNavigator() {
