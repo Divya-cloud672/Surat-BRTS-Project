@@ -1,20 +1,31 @@
-// navigation/AppNavigator.js
+// navigation/AppNavigator.tsx
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import LanguageScreen from '../screens/LanguageScreen';
 import HomeScreen from '../screens/HomeScreen';
 import PlannerScreen from '../screens/PlannerScreen';
 import TicketScreen from '../screens/TicketScreen';
 import StopsScreen from '../screens/StopsScreen';
-import MyTicketsScreen from '../screens/TicketScreen';
 import FareScreen from '../screens/FareScreen';
 import MapScreen from '../screens/MapScreen';
 
+// 1. Define type for your Stack Navigator routes
+export type RootStackParamList = {
+  Welcome: undefined;
+  Language: undefined;
+  Home: undefined;
+  plantrip: undefined;
+  mticket: undefined;
+  stops: undefined;
+  'Fare-Chart': undefined;
+  'Surat Map': undefined;
+};
 
-const Stack = createStackNavigator();
+// 2. Create stack navigator with typed routes
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
-export default function AppNavigator() {
+const AppNavigator: React.FC = () => {
   return (
     <Stack.Navigator initialRouteName="Welcome">
       <Stack.Screen 
@@ -59,15 +70,7 @@ export default function AppNavigator() {
           headerTintColor: '#fff'
         }}
       />
-      <Stack.Screen 
-        name="My Tickets" 
-        component={MyTicketsScreen} 
-        options={{ 
-          title: 'My Tickets',
-          headerStyle: { backgroundColor: '#1565c0' },
-          headerTintColor: '#fff'
-        }}
-      />
+      
       <Stack.Screen 
         name="Fare-Chart" 
         component={FareScreen} 
@@ -88,4 +91,6 @@ export default function AppNavigator() {
       />
     </Stack.Navigator>
   );
-}
+};
+
+export default AppNavigator;

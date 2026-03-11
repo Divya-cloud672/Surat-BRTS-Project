@@ -1,4 +1,4 @@
-// screens/WelcomeScreen.jsx
+// screens/WelcomeScreen.tsx
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -9,13 +9,20 @@ import {
   TouchableOpacity,
   StatusBar,
   Dimensions,
-  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 const { width, height } = Dimensions.get('window');
 
-export default function WelcomeScreen({ navigation }) {
+type RootStackParamList = {
+  Welcome: undefined;
+  Language: undefined;
+};
+
+type WelcomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
+
+export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
@@ -23,7 +30,7 @@ export default function WelcomeScreen({ navigation }) {
 
   useEffect(() => {
     StatusBar.setBarStyle('light-content');
-    
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -57,14 +64,17 @@ export default function WelcomeScreen({ navigation }) {
         duration: 100,
         useNativeDriver: true,
       }),
-    ]).start(() => {
-      navigation.replace('Language');
-    });
+    ]).start(() => navigation.replace('Language'));
   };
 
   return (
     <ImageBackground
-      source={require('../assets/images/bus4.jpg')}
+      // Use local image if exists, fallback to placeholder
+      source={
+        require('../assets/images/bus4.jpg') // make sure this path exists
+          ? require('../assets/images/bus4.jpg')
+          : { uri: 'https://via.placeholder.com/400x800.png' }
+      }
       style={styles.backgroundImage}
       resizeMode="cover"
     >
@@ -74,24 +84,25 @@ export default function WelcomeScreen({ navigation }) {
             styles.content,
             {
               opacity: fadeAnim,
-              transform: [
-                { translateY: slideAnim },
-                { scale: scaleAnim }
-              ],
+              transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
             },
           ]}
         >
           <View style={styles.iconContainer}>
             <Icon name="bus" size={80} color="#fff" />
           </View>
-          
+
           <Text style={styles.title}>BRTSConnect</Text>
           <Text style={styles.subtitle}>Surat</Text>
-          
+
           <View style={styles.taglineContainer}>
             <Text style={styles.tagline}>Smart Travel • Safe Journey</Text>
-            <Text style={styles.taglineHindi}>स्मार्ट यात्रा • सुरक्षित सफर</Text>
-            <Text style={styles.taglineGujarati}>સ્માર્ટ મુસાફરી • સલામત સફર</Text>
+            <Text style={styles.taglineHindi}>
+              स्मार्ट यात्रा • सुरक्षित सफर
+            </Text>
+            <Text style={styles.taglineGujarati}>
+              સ્માર્ટ મુસાફરી • સલામત સફર
+            </Text>
           </View>
 
           <Animated.View style={{ transform: [{ scale: buttonScaleAnim }] }}>
@@ -111,27 +122,19 @@ export default function WelcomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
+  backgroundImage: { flex: 1, width: '100%', height: '100%' },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(21, 101, 192, 0.9)',
+    backgroundColor: 'rgba(21, 101, 192, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  content: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    width: '100%',
-  },
+  content: { alignItems: 'center', paddingHorizontal: 20, width: '100%' },
   iconContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -152,10 +155,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     fontWeight: '600',
   },
-  taglineContainer: {
-    marginTop: 30,
-    alignItems: 'center',
-  },
+  taglineContainer: { marginTop: 30, alignItems: 'center' },
   tagline: {
     fontSize: 16,
     color: '#fff',

@@ -1,4 +1,4 @@
-// screens/LanguageScreen.js
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -12,18 +12,38 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
-export default function LanguageScreen({ navigation }) {
-  const [selectedLang, setSelectedLang] = useState(null);
-  const [loading, setLoading] = useState(false);
+// ---- Types ----
+type LanguageScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Language'
+>;
 
-  const languages = [
+type LanguageScreenProps = {
+  navigation: LanguageScreenNavigationProp;
+};
+
+interface Language {
+  code: string;
+  name: string;
+  native: string;
+  icon: string;
+  flag: string;
+}
+
+// ---- Component ----
+const LanguageScreen: React.FC<LanguageScreenProps> = ({ navigation }) => {
+  const [selectedLang, setSelectedLang] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const languages: Language[] = [
     { code: 'en', name: 'English', native: 'English', icon: 'alphabet-latin', flag: '🇬🇧' },
     { code: 'hi', name: 'Hindi', native: 'हिन्दी', icon: 'alpha-h', flag: '🇮🇳' },
     { code: 'gu', name: 'Gujarati', native: 'ગુજરાતી', icon: 'alpha-g', flag: '🇮🇳' },
   ];
 
-  // Check if language was previously selected
   useEffect(() => {
     checkPreviousLanguage();
   }, []);
@@ -39,25 +59,21 @@ export default function LanguageScreen({ navigation }) {
     }
   };
 
-  const handleLanguageSelect = async (lang) => {
+  const handleLanguageSelect = async (lang: Language) => {
     setSelectedLang(lang.code);
-    
     try {
       setLoading(true);
       await AsyncStorage.setItem('userLanguage', lang.code);
       await AsyncStorage.setItem('languageName', lang.name);
-      
-      // Small delay to show success state
+
       setTimeout(() => {
         setLoading(false);
-        // Navigate directly to Home screen
         navigation.replace('Home');
       }, 500);
-      
     } catch (error) {
       console.log('Save error:', error);
       Alert.alert(
-        'Error', 
+        'Error',
         'Failed to save language preference. Please try again.',
         [{ text: 'OK' }]
       );
@@ -68,7 +84,7 @@ export default function LanguageScreen({ navigation }) {
   const handleContinue = () => {
     if (selectedLang) {
       const selectedLanguage = languages.find(lang => lang.code === selectedLang);
-      handleLanguageSelect(selectedLanguage);
+      if (selectedLanguage) handleLanguageSelect(selectedLanguage);
     } else {
       Alert.alert(
         'No Language Selected',
@@ -94,7 +110,7 @@ export default function LanguageScreen({ navigation }) {
         </View>
 
         <View style={styles.languageContainer}>
-          {languages.map((lang) => (
+          {languages.map(lang => (
             <TouchableOpacity
               key={lang.code}
               style={[
@@ -119,11 +135,10 @@ export default function LanguageScreen({ navigation }) {
           ))}
         </View>
 
-        {/* Continue Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
             styles.continueButton,
-            (!selectedLang || loading) && styles.continueButtonDisabled
+            (!selectedLang || loading) && styles.continueButtonDisabled,
           ]}
           onPress={handleContinue}
           disabled={loading || !selectedLang}
@@ -135,7 +150,6 @@ export default function LanguageScreen({ navigation }) {
           )}
         </TouchableOpacity>
 
-        {/* Loading Overlay */}
         {loading && (
           <View style={styles.loaderOverlay}>
             <ActivityIndicator size="large" color="#fff" />
@@ -145,24 +159,15 @@ export default function LanguageScreen({ navigation }) {
       </View>
     </ImageBackground>
   );
-}
+};
 
+export default LanguageScreen;
+
+// ---- Styles remain the same ----
 const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(21, 101, 192, 0.97)',
-    padding: 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 60,
-    marginBottom: 30,
-  },
+  backgroundImage: { flex: 1, width: '100%', height: '100%' },
+  overlay: { flex: 1, backgroundColor: 'rgba(21, 101, 192, 0.97)', padding: 20 },
+  header: { alignItems: 'center', marginTop: 60, marginBottom: 30 },
   headerIconContainer: {
     width: 80,
     height: 80,
@@ -174,20 +179,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 5,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
-  languageContainer: {
-    flex: 1,
-    marginBottom: 20,
-  },
+  headerTitle: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 5 },
+  headerSubtitle: { fontSize: 16, color: 'rgba(255, 255, 255, 0.8)' },
+  languageContainer: { flex: 1, marginBottom: 20 },
   languageCard: {
     flexDirection: 'row',
     backgroundColor: '#fff',
@@ -207,26 +201,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0fff0',
     transform: [{ scale: 1.02 }],
   },
-  flag: {
-    fontSize: 30,
-    marginRight: 15,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  languageName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  nativeName: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
-  },
-  checkIconContainer: {
-    marginLeft: 10,
-  },
+  flag: { fontSize: 30, marginRight: 15 },
+  textContainer: { flex: 1 },
+  languageName: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  nativeName: { fontSize: 14, color: '#666', marginTop: 2 },
+  checkIconContainer: { marginLeft: 10 },
   continueButton: {
     backgroundColor: '#fff',
     padding: 16,
@@ -239,15 +218,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
-  continueButtonDisabled: {
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    elevation: 0,
-  },
-  continueButtonText: {
-    color: '#1565C0',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+  continueButtonDisabled: { backgroundColor: 'rgba(255, 255, 255, 0.5)', elevation: 0 },
+  continueButtonText: { color: '#1565C0', fontSize: 18, fontWeight: 'bold' },
   loaderOverlay: {
     position: 'absolute',
     top: 0,
@@ -258,9 +230,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loaderText: {
-    color: '#fff',
-    marginTop: 10,
-    fontSize: 16,
-  },
+  loaderText: { color: '#fff', marginTop: 10, fontSize: 16 },
 });

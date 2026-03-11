@@ -1,4 +1,4 @@
-// screens/TicketScreen.js
+
 import React, { useState } from 'react';
 import {
   View,
@@ -7,24 +7,26 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  Alert
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function TicketScreen() {
-  const [source, setSource] = useState('');
-  const [destination, setDestination] = useState('');
-  const [ticketType, setTicketType] = useState('single');
-  const [quantity, setQuantity] = useState(1);
+
+  const [source, setSource] = useState<string>('');
+  const [destination, setDestination] = useState<string>('');
+  const [ticketType, setTicketType] = useState<'single' | 'return'>('single');
+  const [quantity, setQuantity] = useState<number>(1);
 
   const handleBuyTicket = () => {
     if (!source || !destination) {
       Alert.alert('Error', 'Please select source and destination');
       return;
     }
+
     Alert.alert(
       'Success',
-      `Ticket booked!\nFrom: ${source}\nTo: ${destination}\nType: ${ticketType}\nQuantity: ${quantity}`
+      `Ticket booked!\nFrom: ${source}\nTo: ${destination}\nType: ${ticketType}\nQuantity: ${quantity}`,
     );
   };
 
@@ -58,22 +60,35 @@ export default function TicketScreen() {
           <TouchableOpacity
             style={[
               styles.typeButton,
-              ticketType === 'single' && styles.selectedType
+              ticketType === 'single' && styles.selectedType,
             ]}
             onPress={() => setTicketType('single')}
           >
-            <Text style={ticketType === 'single' ? styles.selectedTypeText : styles.typeText}>
+            <Text
+              style={
+                ticketType === 'single'
+                  ? styles.selectedTypeText
+                  : styles.typeText
+              }
+            >
               Single
             </Text>
           </TouchableOpacity>
+
           <TouchableOpacity
             style={[
               styles.typeButton,
-              ticketType === 'return' && styles.selectedType
+              ticketType === 'return' && styles.selectedType,
             ]}
             onPress={() => setTicketType('return')}
           >
-            <Text style={ticketType === 'return' ? styles.selectedTypeText : styles.typeText}>
+            <Text
+              style={
+                ticketType === 'return'
+                  ? styles.selectedTypeText
+                  : styles.typeText
+              }
+            >
               Return
             </Text>
           </TouchableOpacity>
@@ -87,7 +102,9 @@ export default function TicketScreen() {
           >
             <Icon name="minus" size={20} color="#fff" />
           </TouchableOpacity>
+
           <Text style={styles.quantityText}>{quantity}</Text>
+
           <TouchableOpacity
             style={styles.quantityButton}
             onPress={() => setQuantity(quantity + 1)}
