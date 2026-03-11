@@ -1,20 +1,21 @@
+
 import React, { useState } from 'react';
-import { 
-  View, 
-  Image, 
-  StyleSheet, 
-  Text, 
-  ScrollView, 
+import {
+  View,
+  Image,
+  StyleSheet,
+  Text,
+  ScrollView,
   Dimensions,
   ActivityIndicator,
-  Alert 
+  Alert,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
-export default function MapScreen() {
-  const [imageLoading, setImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
+const MapScreen: React.FC = () => {
+  const [imageLoading, setImageLoading] = useState<boolean>(true);
+  const [imageError, setImageError] = useState<boolean>(false);
 
   // Handle image load error
   const handleImageError = () => {
@@ -22,7 +23,7 @@ export default function MapScreen() {
     setImageLoading(false);
     Alert.alert(
       'Error',
-      'Failed to load the BRTS route map. Please check your connection and try again.'
+      'Failed to load the BRTS route map. Please check your connection and try again.',
     );
   };
 
@@ -38,7 +39,7 @@ export default function MapScreen() {
             <Text style={styles.loadingText}>Loading map...</Text>
           </View>
         )}
-        
+
         {imageError ? (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>⚠️</Text>
@@ -57,7 +58,6 @@ export default function MapScreen() {
         )}
       </View>
 
-      {/* Optional: Add map legend or info */}
       <View style={styles.infoContainer}>
         <Text style={styles.infoTitle}>Map Legend</Text>
         <View style={styles.legendItem}>
@@ -75,7 +75,9 @@ export default function MapScreen() {
       </View>
     </ScrollView>
   );
-}
+};
+
+export default MapScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -96,8 +98,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   mapCard: {
-    width: width - 30, // Responsive width
-    height: width * 0.8, // Responsive height (80% of width)
+    width: width - 30,
+    height: width * 0.8,
     borderRadius: 15,
     overflow: 'hidden',
     backgroundColor: '#fff',

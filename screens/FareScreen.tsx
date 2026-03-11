@@ -1,15 +1,27 @@
-// screens/FareScreen.js
+
 import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const FARE_DATA = [
+// 1. Define types for fare and discount
+interface FareItem {
+  distance: string;
+  fare: number;
+}
+
+interface DiscountItem {
+  type: string;
+  discount: string;
+  validity: string;
+}
+
+// 2. Define data arrays with types
+const FARE_DATA: FareItem[] = [
   { distance: '0-2 km', fare: 5 },
   { distance: '2-5 km', fare: 10 },
   { distance: '5-10 km', fare: 15 },
@@ -19,14 +31,15 @@ const FARE_DATA = [
   { distance: '25+ km', fare: 35 },
 ];
 
-const DISCOUNTS = [
+const DISCOUNTS: DiscountItem[] = [
   { type: 'Student', discount: '50%', validity: 'Valid on weekdays' },
   { type: 'Senior Citizen', discount: '40%', validity: 'Valid all days' },
   { type: 'Monthly Pass', discount: '30%', validity: '30 days validity' },
   { type: 'Group Booking', discount: '20%', validity: 'Min 5 persons' },
 ];
 
-export default function FareScreen() {
+// 3. Convert component to React.FC
+const FareScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -69,7 +82,9 @@ export default function FareScreen() {
       </View>
     </ScrollView>
   );
-}
+};
+
+export default FareScreen;
 
 const styles = StyleSheet.create({
   container: {

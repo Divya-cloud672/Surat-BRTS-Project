@@ -11,26 +11,77 @@ import {
   StyleSheet,
 } from 'react-native';
 
-// Import your dataset
-import routes from '../data/routes.json';
-import stops from '../data/stops.json';
-import routeStops from '../data/routesStops.json';
+// Interfaces for dataset
+interface Stop {
+  id: number;
+  name: string;
+}
 
-export default function PlannerScreen() {
-  const [startStop, setStartStop] = useState('');
-  const [endStop, setEndStop] = useState('');
-  const [availableBuses, setAvailableBuses] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [showStartSuggestions, setShowStartSuggestions] = useState(false);
-  const [showEndSuggestions, setShowEndSuggestions] = useState(false);
-  const [filteredStartStops, setFilteredStartStops] = useState([]);
-  const [filteredEndStops, setFilteredEndStops] = useState([]);
+interface Route {
+  id: number;
+  name: string;
+}
 
-  // All stop names
-  const ALL_STOPS = stops.stops.map(s => s.name);
+interface RouteStop {
+  route_id: number;
+  stops: number[];
+}
 
-  // Filter suggestions
-  const filterSuggestions = (text, type) => {
+// Props for bus item
+interface BusItem {
+  id: number;
+  busNumber: number;
+  route: string;
+  stops: string[];
+  fare: number;
+  duration: string;
+  frequency: string;
+}
+
+// ============== MOCK DATA (Replace with actual imports later) ==============
+const stopsData: Stop[] = [
+  { id: 1, name: 'Majura Gate' },
+  { id: 2, name: 'Delhi Gate' },
+  { id: 3, name: 'Railway Station' },
+  { id: 4, name: 'Udhna' },
+  { id: 5, name: 'Katargam' },
+  { id: 6, name: 'Adajan' },
+  { id: 7, name: 'Pal' },
+  { id: 8, name: 'Dumas' },
+  { id: 9, name: 'Varachha' },
+  { id: 10, name: 'Sarthana' },
+];
+
+const routesData: Route[] = [
+  { id: 101, name: 'Route 1: Majura Gate - Udhna' },
+  { id: 102, name: 'Route 2: Railway Station - Adajan' },
+  { id: 103, name: 'Route 3: Katargam - Varachha' },
+  { id: 104, name: 'Route 4: Pal - Dumas' },
+];
+
+const routeStopsData: RouteStop[] = [
+  { route_id: 101, stops: [1, 2, 3, 4] }, // Majura Gate → Delhi Gate → Railway Station → Udhna
+  { route_id: 102, stops: [3, 6, 7] }, // Railway Station → Adajan → Pal
+  { route_id: 103, stops: [5, 2, 9] }, // Katargam → Delhi Gate → Varachha
+  { route_id: 104, stops: [7, 8] }, // Pal → Dumas
+];
+// ============================================================================
+
+const PlannerScreen: React.FC = () => {
+  const [startStop, setStartStop] = useState<string>('');
+  const [endStop, setEndStop] = useState<string>('');
+  const [availableBuses, setAvailableBuses] = useState<BusItem[]>([]);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [showStartSuggestions, setShowStartSuggestions] =
+    useState<boolean>(false);
+  const [showEndSuggestions, setShowEndSuggestions] = useState<boolean>(false);
+  const [filteredStartStops, setFilteredStartStops] = useState<string[]>([]);
+  const [filteredEndStops, setFilteredEndStops] = useState<string[]>([]);
+
+  // Use the mock data instead of declare
+  const ALL_STOPS: string[] = stopsData.map(s => s.name);
+
+  const filterSuggestions = (text: string, type: 'start' | 'end') => {
     const filtered = ALL_STOPS.filter(stop =>
       stop.toLowerCase().includes(text.toLowerCase()),
     );
@@ -43,8 +94,7 @@ export default function PlannerScreen() {
     }
   };
 
-  // Select suggestion
-  const selectSuggestion = (stop, type) => {
+  const selectSuggestion = (stop: string, type: 'start' | 'end') => {
     if (type === 'start') {
       setStartStop(stop);
       setShowStartSuggestions(false);
@@ -54,7 +104,6 @@ export default function PlannerScreen() {
     }
   };
 
-  // Search buses using dataset
   const searchBuses = () => {
     if (!startStop.trim() || !endStop.trim()) {
       Alert.alert('Error', 'Please enter both start and end stops');
@@ -64,11 +113,10 @@ export default function PlannerScreen() {
     setIsSearching(true);
 
     setTimeout(() => {
-      // Find stop IDs
-      const start = stops.stops.find(
+      const start = stopsData.find(
         s => s.name.toLowerCase() === startStop.toLowerCase(),
       );
-      const end = stops.stops.find(
+      const end = stopsData.find(
         s => s.name.toLowerCase() === endStop.toLowerCase(),
       );
 
@@ -81,24 +129,22 @@ export default function PlannerScreen() {
         return;
       }
 
-      // Filter routeStops
-      const resultRoutes = routeStops.routeStops.filter(route => {
+      const resultRoutes = routeStopsData.filter(route => {
         const startIndex = route.stops.indexOf(start.id);
         const endIndex = route.stops.indexOf(end.id);
         return startIndex !== -1 && endIndex !== -1 && startIndex < endIndex;
       });
 
-      // Map to display data
-      const buses = resultRoutes.map(route => {
-        const routeInfo = routes.routes.find(r => r.id === route.route_id);
+      const buses: BusItem[] = resultRoutes.map(route => {
+        const routeInfo = routesData.find(r => r.id === route.route_id);
         return {
           id: route.route_id,
           busNumber: route.route_id,
           route: routeInfo?.name || 'Unknown Route',
           stops: route.stops.map(
-            id => stops.stops.find(s => s.id === id)?.name,
+            id => stopsData.find(s => s.id === id)?.name || '',
           ),
-          fare: 20, // You can customize fare
+          fare: 20,
           duration: '25 mins',
           frequency: 'Every 15 mins',
         };
@@ -116,14 +162,14 @@ export default function PlannerScreen() {
     }, 800);
   };
 
-  // Show bus details on press
-  const showBusDetails = bus => {
+  const showBusDetails = (bus: BusItem) => {
     const startIndex = bus.stops.findIndex(
       s => s.toLowerCase() === startStop.toLowerCase(),
     );
     const endIndex = bus.stops.findIndex(
       s => s.toLowerCase() === endStop.toLowerCase(),
     );
+
     if (startIndex !== -1 && endIndex !== -1) {
       const stopsBetween = bus.stops.slice(startIndex, endIndex + 1);
       Alert.alert(
@@ -138,8 +184,7 @@ export default function PlannerScreen() {
     }
   };
 
-  // Render each bus item
-  const renderBusItem = ({ item }) => (
+  const renderBusItem = ({ item }: { item: BusItem }) => (
     <TouchableOpacity
       style={styles.busCard}
       onPress={() => showBusDetails(item)}
@@ -180,7 +225,6 @@ export default function PlannerScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Bus Route Planner</Text>
 
-      {/* Start Stop Input */}
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Enter Start Stop"
@@ -195,10 +239,7 @@ export default function PlannerScreen() {
         />
         {showStartSuggestions && filteredStartStops.length > 0 && (
           <View style={styles.suggestionsContainer}>
-            <ScrollView
-              nestedScrollEnabled={true}
-              style={styles.suggestionsList}
-            >
+            <ScrollView nestedScrollEnabled style={styles.suggestionsList}>
               {filteredStartStops.map((stop, index) => (
                 <TouchableOpacity
                   key={index}
@@ -213,7 +254,6 @@ export default function PlannerScreen() {
         )}
       </View>
 
-      {/* End Stop Input */}
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Enter End Stop"
@@ -228,10 +268,7 @@ export default function PlannerScreen() {
         />
         {showEndSuggestions && filteredEndStops.length > 0 && (
           <View style={styles.suggestionsContainer}>
-            <ScrollView
-              nestedScrollEnabled={true}
-              style={styles.suggestionsList}
-            >
+            <ScrollView nestedScrollEnabled style={styles.suggestionsList}>
               {filteredEndStops.map((stop, index) => (
                 <TouchableOpacity
                   key={index}
@@ -246,7 +283,6 @@ export default function PlannerScreen() {
         )}
       </View>
 
-      {/* Search Button */}
       <TouchableOpacity
         style={[
           styles.searchButton,
@@ -262,7 +298,6 @@ export default function PlannerScreen() {
         )}
       </TouchableOpacity>
 
-      {/* Available Buses */}
       {availableBuses.length > 0 && (
         <View style={styles.resultsContainer}>
           <Text style={styles.resultsTitle}>
@@ -271,7 +306,7 @@ export default function PlannerScreen() {
           <FlatList
             data={availableBuses}
             renderItem={renderBusItem}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.id.toString()}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
           />
@@ -279,7 +314,7 @@ export default function PlannerScreen() {
       )}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
@@ -390,3 +425,5 @@ const styles = StyleSheet.create({
   fareText: { fontSize: 14, fontWeight: '600', color: '#28a745' },
   durationText: { fontSize: 14, color: '#666' },
 });
+
+export default PlannerScreen;
